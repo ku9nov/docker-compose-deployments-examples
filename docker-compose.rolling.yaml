@@ -1,0 +1,66 @@
+services:
+  helloworld:
+    build:
+      context: ./hello-world 
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.routers.backend.rule=Host(`backend.docker.localhost`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+    deploy:
+      replicas: 2
+    restart: unless-stopped
+    networks:
+      - traefik
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      retries: 3
+      start_period: 30s
+      timeout: 5s
+
+  helloworld-front:
+    build:
+      context: ./hello-world-front
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.rule=Host(`frontend.docker.localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    deploy:
+      replicas: 2
+    restart: unless-stopped
+    networks:
+      - traefik
+
+  traefik:
+    image: traefik:v3.3.4
+    container_name: traefik
+    command:
+      - --providers.docker=true
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "8000:80"
+    networks:
+      - traefik
+    depends_on:
+      - socket-proxy
+
+  socket-proxy:
+    container_name: socket-proxy
+    image: tecnativa/docker-socket-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - traefik
+    environment:
+      CONTAINERS: 1
+    restart: unless-stopped
+
+networks:
+  traefik:
+    driver: bridge
