@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.entrypoints=web"
-      - "traefik.http.routers.backend.rule=Host(`backend.docker.localhost`)"
-      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      - "traefik.http.routers.helloworld.entrypoints=web"
+      - "traefik.http.routers.helloworld.rule=Host(`backend.docker.localhost`)"
+      - "traefik.http.services.helloworld.loadbalancer.server.port=8000"
     deploy:
       replicas: 2
     restart: unless-stopped
@@ -26,9 +26,9 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.routers.frontend.rule=Host(`frontend.docker.localhost`)"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.helloworld-front.entrypoints=web"
+      - "traefik.http.routers.helloworld-front.rule=Host(`frontend.docker.localhost`)"
+      - "traefik.http.services.helloworld-front.loadbalancer.server.port=80"
     deploy:
       replicas: 2
     restart: unless-stopped
@@ -39,12 +39,18 @@ services:
     image: traefik:v3.3.4
     container_name: traefik
     command:
+      - --api.insecure=true
       - --providers.docker=true
       - --providers.docker.endpoint=tcp://socket-proxy:2375
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
+      - --providers.file.directory=/etc/traefik # it's important to use dir here (traefik bug https://community.traefik.io/t/trying-dynamic-configurations-for-traefik/21811/12)
+      - --providers.file.watch=true
     ports:
       - "8000:80"
+      - "8080:8080"
+    volumes:
+      - ./traefik:/etc/traefik:ro
     networks:
       - traefik
     depends_on:
