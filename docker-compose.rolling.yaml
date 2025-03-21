@@ -5,9 +5,12 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.helloworld.entrypoints=web"
-      - "traefik.http.routers.helloworld.rule=Host(`backend.docker.localhost`)"
-      - "traefik.http.services.helloworld.loadbalancer.server.port=8000"
+      - "traefik.http.routers.helloworld.entrypoints=web" # required
+      - "traefik.http.routers.helloworld.rule=Host(`backend.example.com`)" # required
+      - "traefik.http.services.helloworld.loadbalancer.server.port=8000" # required
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.path=/health" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.interval=10s" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.timeout=1s" # optional
     deploy:
       replicas: 2
     restart: unless-stopped
@@ -26,23 +29,25 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.helloworld-front.entrypoints=web"
-      - "traefik.http.routers.helloworld-front.rule=Host(`frontend.docker.localhost`)"
-      - "traefik.http.services.helloworld-front.loadbalancer.server.port=80"
+      - "traefik.http.routers.helloworld-front.entrypoints=web" # required
+      - "traefik.http.routers.helloworld-front.rule=Host(`frontend.example.com`)" # required
+      - "traefik.http.services.helloworld-front.loadbalancer.server.port=80" # required
+      - "traefik.http.services.helloworld-front.loadbalancer.healthCheck.path=/" # optional
+      - "traefik.http.services.helloworld-front.loadbalancer.healthCheck.interval=10s" # optional
+      - "traefik.http.services.helloworld-front.loadbalancer.healthCheck.timeout=1s" # optional
     deploy:
       replicas: 2
     restart: unless-stopped
     networks:
       - traefik
 
-  traefik:
+  traefik-proxy:
     image: traefik:v3.3.4
-    container_name: traefik
     command:
       - --api.insecure=true
-      - --providers.docker=true
-      - --providers.docker.endpoint=tcp://socket-proxy:2375
-      - --providers.docker.exposedbydefault=false
+      # - --providers.docker=true (optional for specific needs)
+      # - --providers.docker.endpoint=tcp://socket-proxy:2375
+      # - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --providers.file.directory=/etc/traefik # it's important to use dir here (traefik bug https://community.traefik.io/t/trying-dynamic-configurations-for-traefik/21811/12)
       - --providers.file.watch=true
@@ -53,19 +58,18 @@ services:
       - ./traefik:/etc/traefik:ro
     networks:
       - traefik
-    depends_on:
-      - socket-proxy
+    # depends_on:
+    #   - socket-proxy
 
-  socket-proxy:
-    container_name: socket-proxy
-    image: tecnativa/docker-socket-proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - traefik
-    environment:
-      CONTAINERS: 1
-    restart: unless-stopped
+  # socket-proxy: (optional for specific needs)
+  #   image: tecnativa/docker-socket-proxy
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   networks:
+  #     - traefik
+  #   environment:
+  #     CONTAINERS: 1
+  #   restart: unless-stopped
 
 networks:
   traefik:
