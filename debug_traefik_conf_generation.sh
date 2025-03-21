@@ -37,16 +37,41 @@ docker ps -q | xargs -I {} docker inspect --format '{{json .Config.Labels}}' {} 
     if (
       (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.path"] // "") == "" and
       (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.interval"] // "") == "" and
-      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.timeout"] // "") == ""
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.timeout"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.scheme"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.mode"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.hostname"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.port"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.followRedirects"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.method"] // "") == "" and
+      (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.status"] // "") == ""
     ) then
       empty
     else
       {
         path: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.path"] // ""),
         interval: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.interval"] // ""),
-        timeout: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.timeout"] // "")
-      }
+        timeout: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.timeout"] // ""),
+        scheme: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.scheme"] // ""),
+        mode: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.mode"] // ""),
+        hostname: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.hostname"] // ""),
+        port: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.port"] // ""),
+        followRedirects: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.followRedirects"] // ""),
+        method: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.method"] // ""),
+        status: (item["traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.status"] // ""),
+        headers: (
+          item | to_entries | 
+          map(select(.key | startswith("traefik.http.services." + item["com.docker.compose.service"] + ".loadbalancer.healthCheck.headers."))) |
+          map({
+            key: (.key | split(".") | .[-1]), 
+            value: .value
+          }) |
+          from_entries
+        ), 
+      } | with_entries(select(.value != "" and .value != {}))
+      
     end;
+
 
 
   reduce .[] as $item ({}; 
@@ -65,8 +90,9 @@ docker ps -q | xargs -I {} docker inspect --format '{{json .Config.Labels}}' {} 
       debug("HealthCheck Path: \($item["traefik.http.services." + $item["com.docker.compose.service"] + ".loadbalancer.healthCheck.path"] // "none")", ""),
       debug("HealthCheck Interval: \($item["traefik.http.services." + $item["com.docker.compose.service"] + ".loadbalancer.healthCheck.interval"] // "none")", ""),
       debug("HealthCheck Timeout: \($item["traefik.http.services." + $item["com.docker.compose.service"] + ".loadbalancer.healthCheck.timeout"] // "none")", ""),
+      debug("Extracting headers for service: \($item["com.docker.compose.service"])", ""),
+      debug("Headers: \($item | to_entries | map(select(.key | startswith("traefik.http.services." + $item["com.docker.compose.service"] + ".loadbalancer.healthCheck.headers."))) | .[] | "\(.key) = \(.value)")", ""),
 
-      # Debug: Check labels for each element
       debug("Calling extract_health_check for service: \($item["com.docker.compose.service"])", ""),
       (extract_health_check($item) as $hc |
         if $hc then
@@ -79,7 +105,4 @@ docker ps -q | xargs -I {} docker inspect --format '{{json .Config.Labels}}' {} 
 
     else . end
   )' | yq -P 
-
-
-
 

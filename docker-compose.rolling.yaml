@@ -11,6 +11,17 @@ services:
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.path=/health" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.interval=10s" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.timeout=1s" # optional
+
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.scheme=http" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.mode=http" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.hostname=backend.example.com" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.port=8000" # optional
+
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.headers.My-Custom-Header=foo" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.headers.My-Header=bar" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.followRedirects=true" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.method=GET" # optional
+      - "traefik.http.services.helloworld.loadbalancer.healthCheck.status=200" # optional
     deploy:
       replicas: 2
     restart: unless-stopped
