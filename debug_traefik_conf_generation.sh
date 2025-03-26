@@ -1,29 +1,32 @@
 #!/bin/bash
 
 DOCKER_COMPOSE_FILE="docker-compose.rolling.yaml"
-
+echo "[DEBUG] Using Docker Compose file: $DOCKER_COMPOSE_FILE"
+echo "[DEBUG] Extracting services from $DOCKER_COMPOSE_FILE"
 # Getting list of services, ignoring services which contains "proxy" in name
 services=$(yq eval '.services | keys | map(select(test("proxy") | not)) | .[]' "$DOCKER_COMPOSE_FILE")
-
+echo "[DEBUG] Services detected: $services"
 service_ips=""
 
 # Getting containers IP-addresses
 for service in $services; do
-  container_ids=$(docker compose -f "$DOCKER_COMPOSE_FILE" ps -q "$service")
-
+  echo "[DEBUG] Checking service: $service"
+  container_ids=$(docker compose -f "$DOCKER_COMPOSE_FILE" ps -q "$service" | cut -c1-12)
+  echo "[DEBUG] Containers for $service: $container_ids"
   for container_id in $container_ids; do
-    container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$container_id")
+    container_ip=$container_id
+    echo "[DEBUG] Container: $container_id, IP: $container_ip"
     if [ -n "$container_ip" ]; then
       service_ips="${service_ips}${service}:${container_ip} "
     fi
   done
 done
-
+echo "[DEBUG] Final service_ips: $service_ips"
 if [ -z "$service_ips" ]; then
   echo "Error: The list of IP addresses is empty!"
   exit 1
 fi
-
+echo "[DEBUG] Fetching container labels"
 # Get Traefik-labels and generate YAML
 docker ps -q | xargs -I {} docker inspect --format '{{json .Config.Labels}}' {} | jq -s --arg service_ips "$service_ips" '
   def split_ips:
