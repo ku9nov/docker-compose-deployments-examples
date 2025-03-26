@@ -6,7 +6,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.helloworld.entrypoints=web" # required
-      - "traefik.http.routers.helloworld.rule=Host(`backend.example.com`)" # required
+      - "traefik.http.routers.helloworld.rule=Host(`backend.example.com`) && Path(`/`)" # required
       - "traefik.http.services.helloworld.loadbalancer.server.port=8000" # required
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.path=/health" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.interval=10s" # optional

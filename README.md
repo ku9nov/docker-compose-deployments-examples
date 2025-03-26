@@ -44,4 +44,9 @@ Curl request for checking zero-time-deployment:
 while true; do curl -H "Host:backend.example.com" http://127.0.0.1:8000; echo -e "\n" ; done
 ```
 
+Curl request for checking canary deployment(not implemented):
 
+```bash
+for i in {1..100}; do curl -s -H "Host:backend.example.com" http://127.0.0.1:8000 | awk '{print $3}' 
+done | sort | uniq -c
+```
