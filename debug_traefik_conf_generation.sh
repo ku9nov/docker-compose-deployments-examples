@@ -4,7 +4,7 @@ DOCKER_COMPOSE_FILE="docker-compose.rolling.yaml"
 echo "[DEBUG] Using Docker Compose file: $DOCKER_COMPOSE_FILE"
 echo "[DEBUG] Extracting services from $DOCKER_COMPOSE_FILE"
 # Getting list of services, ignoring services which contains "proxy" in name
-services=$(yq eval '.services | keys | map(select(test("proxy") | not)) | .[]' "$DOCKER_COMPOSE_FILE")
+services=$(yq eval '.services | to_entries | map(select(.value.labels[]? == "traefik.enable=true")) | .[].key' "$DOCKER_COMPOSE_FILE")
 echo "[DEBUG] Services detected: $services"
 service_ips=""
 
