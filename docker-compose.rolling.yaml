@@ -52,22 +52,25 @@ services:
     networks:
       - traefik
 
+
+# Previously, all Traefik config was mounted from one folder.
+# To support static config too, we now load static config as a dedicated file
+# and mount dynamic config as a dedicated directory, because file provider watch
+# is reliable for dynamic updates only when the dynamic config is mounted as a folder.
   traefik-proxy:
     image: traefik:v3.3.4
     command:
-      - --api.insecure=true
+      - --configFile=/etc/traefik/traefik.static.yml
       # - --providers.docker=true (optional for specific needs)
       # - --providers.docker.endpoint=tcp://socket-proxy:2375
       # - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --providers.file.directory=/etc/traefik # it's important to use dir here (traefik bug https://community.traefik.io/t/trying-dynamic-configurations-for-traefik/21811/12)
-      - --providers.file.watch=true
     restart: unless-stopped
     ports:
       - "8000:80"
       - "8080:8080"
     volumes:
-      - ./traefik:/etc/traefik:ro
+      - ./traefik-static/traefik.static.yml:/etc/traefik/traefik.static.yml:ro
+      - ./traefik:/etc/traefik/dynamic:ro
     networks:
       - traefik
     # depends_on:

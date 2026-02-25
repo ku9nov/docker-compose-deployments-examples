@@ -1,0 +1,14 @@
+api:
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+    forwardedHeaders:
+      trustedIPs:
+        - "172.18.0.0/16"
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
