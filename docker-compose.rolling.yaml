@@ -22,9 +22,15 @@ services:
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.followRedirects=true" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.method=GET" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.status=200" # optional
+      # XMPP TCP
+      - traefik.tcp.routers.xmpp.rule=HostSNI(`*`)
+      - traefik.tcp.routers.xmpp.entrypoints=xmpp
+      - traefik.tcp.services.xmpp.loadbalancer.server.port=5222
     deploy:
       replicas: 2
     restart: unless-stopped
+    # environment:
+    #   SUPER_PUPER_SECRET_KEY: ${SUPER_SECRET_KEY}
     networks:
       - traefik
     healthcheck:
