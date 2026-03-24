@@ -23,13 +23,20 @@ services:
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.method=GET" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.status=200" # optional
       # XMPP TCP
-      - traefik.tcp.routers.xmpp.rule=HostSNI(`*`)
-      - traefik.tcp.routers.xmpp.entrypoints=xmpp
-      - traefik.tcp.services.xmpp.loadbalancer.server.port=5222
+      - traefik.tcp.routers.helloworld-xmpp.rule=HostSNI(`*`)
+      - traefik.tcp.routers.helloworld-xmpp.entrypoints=xmpp
+      - traefik.tcp.services.helloworld-xmpp.loadbalancer.server.port=5222
+      # XMPP Secure TCP
+      - traefik.tcp.routers.helloworld-xmpp-secure.rule=HostSNI(`*`)
+      - traefik.tcp.routers.helloworld-xmpp-secure.entrypoints=xmpp-secure
+      - traefik.tcp.services.helloworld-xmpp-secure.loadbalancer.server.port=5223
     deploy:
       replicas: 2
     restart: unless-stopped
-    # environment:
+    environment:
+      RETURN_200: 98
+      RETURN_400: 1
+      RETURN_500: 1
     #   SUPER_PUPER_SECRET_KEY: ${SUPER_SECRET_KEY}
     networks:
       - traefik
@@ -74,6 +81,8 @@ services:
     ports:
       - "8000:80"
       - "8080:8080"
+      - "5222:5222"
+      - "5223:5223"
     volumes:
       - ./traefik-static/traefik.static.yml:/etc/traefik/traefik.static.yml:ro
       - ./traefik:/etc/traefik/dynamic:ro

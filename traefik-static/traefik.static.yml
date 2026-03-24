@@ -8,6 +8,17 @@ entryPoints:
       trustedIPs:
         - "172.18.0.0/16"
 
+  xmpp:
+    address: ":5222"
+    forwardedHeaders:
+      trustedIPs:
+        - "172.18.0.0/16"
+  xmpp-secure:
+    address: ":5223"
+    forwardedHeaders:
+      trustedIPs:
+        - "172.18.0.0/16"
+
 providers:
   file:
     directory: /etc/traefik/dynamic

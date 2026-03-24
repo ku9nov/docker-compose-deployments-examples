@@ -29,7 +29,6 @@ Hello, instance: db0fb18accab, started at: 2025-03-19T09:33:32Z
 
 ```sh
 curl -H "Host:frontend.example.com" http://127.0.0.1:8000/
-<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="icon" href="/favicon.ico"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#000000"/><meta name="description" content="Web site created using create-react-app"/><link rel="apple-touch-icon" href="/logo192.png"/><link rel="manifest" href="/manifest.json"/><title>React App</title><script defer="defer" src="/static/js/main.f9dc6ac2.js"></script><link href="/static/css/main.f855e6bc.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>
 ```
 
 To trigger an update, use the following command:
@@ -44,9 +43,10 @@ Curl request for checking zero-time-deployment:
 while true; do curl -H "Host:backend.example.com" http://127.0.0.1:8000; echo -e "\n" ; done
 ```
 
-Curl request for checking canary deployment(not implemented):
+Curl request for checking canary deployment:
 
 ```bash
-for i in {1..100}; do curl -s -H "Host:backend.example.com" http://127.0.0.1:8000 | awk '{print $3}' 
-done | sort | uniq -c
+for i in {1..200}; do
+  curl -s -H "Host:backend.example.com" http://127.0.0.1:8000
+done | grep -o 'instance: [^,]*' | sort | uniq -c
 ```
