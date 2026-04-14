@@ -22,14 +22,19 @@ services:
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.followRedirects=true" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.method=GET" # optional
       - "traefik.http.services.helloworld.loadbalancer.healthCheck.status=200" # optional
+      # SNI-based host routing for blue/green requires TLS because SNI is a TLS extension.
+      # To route by HostSNI(`blue.example.com`), keep TLS enabled on the secure router and use DNS.
+      # Certificates are loaded via traefik/certificates.yml and mounted with ./certs:/certs:ro.
+      # The default HostSNI(`*`) router only proxies plain TCP (no TLS) traffic to blue containers.
       # XMPP TCP
       - traefik.tcp.routers.helloworld-xmpp.rule=HostSNI(`*`)
       - traefik.tcp.routers.helloworld-xmpp.entrypoints=xmpp
       - traefik.tcp.services.helloworld-xmpp.loadbalancer.server.port=5222
       # XMPP Secure TCP
-      - traefik.tcp.routers.helloworld-xmpp-secure.rule=HostSNI(`*`)
+      - traefik.tcp.routers.helloworld-xmpp-secure.rule=HostSNI(`blue.example.com`)
       - traefik.tcp.routers.helloworld-xmpp-secure.entrypoints=xmpp-secure
       - traefik.tcp.services.helloworld-xmpp-secure.loadbalancer.server.port=5223
+      - traefik.tcp.routers.helloworld-xmpp-secure.tls=true
     deploy:
       replicas: 2
     restart: unless-stopped
@@ -86,6 +91,8 @@ services:
     volumes:
       - ./traefik-static/traefik.static.yml:/etc/traefik/traefik.static.yml:ro
       - ./traefik:/etc/traefik/dynamic:ro
+      # certificates
+      # - ./certs:/certs:ro
     networks:
       - traefik
     # depends_on:
