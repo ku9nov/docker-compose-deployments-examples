@@ -9,13 +9,13 @@ The purpose of these deployment methods varies, but the most important aspects a
 To implement this deployment method, we need the following plugin: [docker-ztd](https://github.com/ku9nov/docker-compose-ztd-plugin). You can install it using the following command:
 
 ```sh
-curl -fsSL https://gist.githubusercontent.com/ku9nov/f76d2b7f65fa266a17c89e0a50880479/raw/9182ae94d16bea270a4228dd17be16f05e156041/install-docker-ztd.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ku9nov/docker-compose-ztd-plugin/main/scripts/install-docker-ztd-go.sh | bash
 ```
 
 After a successful installation, you can start the example deployment using:
 
 ```sh
-docker ztd -f docker-compose.rolling.yaml up -d
+docker ztd -f docker-compose.yaml up -d
 ```
 
 For the first 10 seconds, traffic will not be routed to the backend due to the configured health check. This is useful for testing purposes.
@@ -34,13 +34,19 @@ curl -H "Host:frontend.example.com" http://127.0.0.1:8000/
 To trigger an update, use the following command:
 
 ```sh
-docker ztd -f docker-compose.rolling.yaml helloworld
+docker ztd -f docker-compose.yaml helloworld
 ```
 
 Curl request for checking zero-time-deployment:
 
 ```bash
 while true; do curl -H "Host:backend.example.com" http://127.0.0.1:8000; echo -e "\n" ; done
+```
+
+Curl request for checking blue-green deployment:
+
+```bash
+curl -i -H "Host:backend.example.com" -H "X-Env:green" http://127.0.0.1:8000
 ```
 
 Curl request for checking canary deployment:
